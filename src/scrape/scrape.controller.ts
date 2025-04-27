@@ -1,25 +1,58 @@
-// src/scraper/scraper.controller.ts
 import { Controller, Get } from '@nestjs/common';
-import { ScraperService, Movie, WorldwideMovie } from './scrape.service';
+import { ScraperService } from './scrape.service';
+import { ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
+import { BoxOfficeResponseDto, MovieDto } from './dto/movie.dto';
 
+@ApiTags('Box Office')
 @Controller('box-office')
 export class ScraperController {
   constructor(private readonly scraperService: ScraperService) {}
 
   @Get('domestic')
-  async getDomestic(): Promise<Movie[]> {
-    const movies= await this.scraperService.scrapeTopDomesticMovies();
-    console.log('Domestic Movies:', movies);
-    return movies;
+  @ApiOperation({ summary: 'Get domestic box office data' })
+  @ApiResponse({ status: 200, type: BoxOfficeResponseDto })
+  async getDomestic() {
+    const data = await this.scraperService.getDomestic();
+    return {
+      lastUpdated: new Date(),
+      data,
+    };
   }
 
   @Get('worldwide')
-  async getWorldwide(): Promise<WorldwideMovie[]> {
-    return this.scraperService.scrapeTopWorldwideMovies();
+  @ApiOperation({ summary: 'Get worldwide box office data' })
+  @ApiResponse({ status: 200, type: BoxOfficeResponseDto })
+  async getWorldwide() {
+    const data = await this.scraperService.getWorldwide();
+    return {
+      lastUpdated: new Date(),
+      data,
+    };
   }
 
-  @Get('combined')
-  async getCombined() {
-    return this.scraperService.scrapeCombinedData();
+  /*
+  @Get('weekend')
+  @ApiOperation({ summary: 'Get weekend box office data' })
+  @ApiResponse({ status: 200, type: BoxOfficeResponseDto })
+  async getWeekend() {
+    const data = await this.scraperService.getWeekend();
+    return {
+      lastUpdated: new Date(),
+      data,
+    };
+  }*/
+
+  @Get()
+  @ApiOperation({ summary: 'Get all box office data' })
+  @ApiResponse({ status: 200 })
+  async getAllData() {
+    return this.scraperService.getAllData();
+  }
+
+  @Get('refresh')
+  @ApiOperation({ summary: 'Force refresh of all box office data' })
+  @ApiResponse({ status: 200 })
+  async forceRefresh() {
+    return this.scraperService.forceRefreshCache();
   }
 }
