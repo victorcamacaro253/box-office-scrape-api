@@ -4,6 +4,19 @@ import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger'; // Add this im
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
+
+   // Enable CORS with production configuration
+   app.enableCors({
+    origin: [
+      'https://cineverseonline.netlify.app', // Your production frontend
+      'http://localhost:5173' // For local development
+    ],
+    methods: 'GET,HEAD,PUT,PATCH,POST,DELETE,OPTIONS',
+    allowedHeaders: 'Content-Type,Authorization',
+    credentials: true,
+  });
+
+
    // Swagger configuration
    const config = new DocumentBuilder()
    .setTitle('Movie API')
