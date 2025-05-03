@@ -18,6 +18,15 @@ export class MovieDto {
 
   @ApiProperty({ required: false })
   releaseDate?: string;
+
+  @ApiProperty({ required: false })
+  change?: string;
+
+  @ApiProperty({ required: false })
+  dailyGross?: string;
+
+  @ApiProperty({ required: false })
+  daysInRelease?: number;
 }
 
 export class ScraperResponseDto {
@@ -29,6 +38,15 @@ export class ScraperResponseDto {
 
   @ApiProperty()
   lastUpdated: Date;
+
+  @ApiProperty({ required: false })
+  change?: string;
+
+  @ApiProperty({ required: false })
+  dailyGross?: string;
+
+  @ApiProperty({ required: false })
+  daysInRelease?: number;
 }
 
 export class BoxOfficeResponseDto {

@@ -94,6 +94,77 @@ export class ScraperService {
     return movies;
   }
 
+  private async scrapeDaily(): Promise<Movie[]> {
+    const url = 'https://www.boxofficemojo.com';
+    const html = await this.fetchHtml(url);
+    const $ = cheerio.load(html);
+
+    const movies: Movie[] = [];
+
+    // Loop through each tab for different dates
+    $('.mojo-recent-dailies-widget-tab').each((index, tab) => {
+        const date = $(tab).attr('class')?.match(/mojo-date-(\d{4}-\d{2}-\d{2})/);
+        const dateStr = date ? date[1] : '';
+
+        // Loop through each row in the table within the tab
+        $(tab).find('table.mojo-table tbody tr').each((rowIndex, row) => {
+            const titleElement = $(row).find('td:nth-child(1) a');
+            const grossElement = $(row).find('td:nth-child(2) span.money');
+
+            const title = titleElement.text().trim();
+            const url = `https://www.boxofficemojo.com${titleElement.attr('href')}`;
+            const dailyGross = grossElement.text().trim().replace(/[\$,]/g, ''); // Remove $ and commas
+
+            if (title && dailyGross) {
+                movies.push({
+                    rank: rowIndex + 1,
+                    title,
+                    url,
+                    gross: dailyGross,
+                    dailyGross,
+                    daysInRelease: 1, // You can adjust this if you have specific logic for this value
+                    date: dateStr // Optional: You can store the date of the box office report
+                });
+            }
+        });
+    });
+
+    return movies;
+}
+
+  private async scrapeWeekend(): Promise<Movie[]> {
+    const url = 'https://www.boxofficemojo.com';
+    const html = await this.fetchHtml(url);
+    const $ = cheerio.load(html);
+  
+    const movies: Movie[] = [];
+  
+    // Use correct selector based on actual HTML structure
+    $('.mojo-homepage-widget.mojo-feature-rw table tbody tr').each((index, element) => {
+      const titleElement = $(element).find('.mojo-field-type-release a');
+      const title = titleElement.text().trim();
+      const url = `https://www.boxofficemojo.com${titleElement.attr('href')}`;
+      const gross = $(element).find('.mojo-field-type-money').first().text().trim();
+      const weekendHeading = $('.mojo-homepage-widget.mojo-feature-rw h2.mojo-heading').first().text().trim();
+const weekendMatch = weekendHeading.match(/Latest Weekend:\s*(.+)/);
+const weekendDate = weekendMatch ? weekendMatch[1] : '';
+
+  
+      movies.push({
+        rank: index + 1,
+        title,
+        url,
+        gross,
+        theaters: '-',  // not available
+        change: '-' ,
+        weekend: weekendDate     // not available
+      });
+    });
+  
+    return movies.slice(0, 10);
+  }
+  
+
   /*
   private async scrapeWeekend(): Promise<Movie[]> {
     const url = 'https://www.boxofficemojo.com/weekend/';
@@ -126,18 +197,20 @@ export class ScraperService {
   private async fetchFreshData(): Promise<BoxOfficeData> {
     try {
       const [domestic, worldwide,
-        //week
+        weekend,daily
         ] = await Promise.all([
         this.scrapeDomestic(),
         this.scrapeWorldwide(),
-       // this.scrapeWeekend(),
+        this.scrapeWeekend(),
+        this.scrapeDaily(),
       ]);
 
       const response: BoxOfficeData = {
         lastUpdated: new Date(),
         domestic,
         worldwide,
-        //weekend,
+        weekend,
+        daily
       };
 
       await this.cacheManager.set(this.CACHE_KEY, response, this.CACHE_TTL);
@@ -154,7 +227,7 @@ export class ScraperService {
         this.logger.log('Serving data from cache');
         console.log('Cached data:');
       return cachedData;
-    }
+    } 
     console.log('No cached data found');
     this.logger.log('Fetching fresh data');
     return this.fetchFreshData();
@@ -169,10 +242,10 @@ export class ScraperService {
     const data = await this.getCachedData();
     return data.worldwide;
   }
-/* async getWeekend(): Promise<Movie[]> {
+ async getWeekend(): Promise<Movie[]> {
     const data = await this.getCachedData();
     return data.weekend;
-  } */
+  } 
 
   async getAllData(): Promise<BoxOfficeData> {
     return this.getCachedData();
@@ -181,5 +254,10 @@ export class ScraperService {
   async forceRefreshCache(): Promise<BoxOfficeData> {
     await this.cacheManager.del(this.CACHE_KEY);
     return this.fetchFreshData();
+  }
+
+  async getDaily(): Promise<Movie[]> {
+    const data = await this.getCachedData();
+    return data.daily;
   }
 }

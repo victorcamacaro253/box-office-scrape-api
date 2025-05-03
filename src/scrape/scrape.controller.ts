@@ -30,17 +30,6 @@ export class ScraperController {
     };
   }
 
-  /*
-  @Get('weekend')
-  @ApiOperation({ summary: 'Get weekend box office data' })
-  @ApiResponse({ status: 200, type: BoxOfficeResponseDto })
-  async getWeekend() {
-    const data = await this.scraperService.getWeekend();
-    return {
-      lastUpdated: new Date(),
-      data,
-    };
-  }*/
 
   @Get()
   @ApiOperation({ summary: 'Get all box office data' })
@@ -48,6 +37,28 @@ export class ScraperController {
   async getAllData() {
     return this.scraperService.getAllData();
   }
+
+  @Get('weekend')
+@ApiOperation({ summary: 'Get weekend box office data' })
+@ApiResponse({ status: 200, type: BoxOfficeResponseDto })
+async getWeekend() {
+  const data = await this.scraperService.getWeekend();
+  return {
+    lastUpdated: new Date(),
+    data,
+  };
+}
+
+@Get('daily')
+@ApiOperation({ summary: 'Get daily box office data' })
+@ApiResponse({ status: 200, type: BoxOfficeResponseDto })
+async getDaily() {
+  const data = await this.scraperService.getDaily();
+  return {
+    lastUpdated: new Date(),
+    data,
+  };
+}
 
   @Get('refresh')
   @ApiOperation({ summary: 'Force refresh of all box office data' })
